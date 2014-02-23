@@ -40,13 +40,16 @@ my $nlines = 10000000000; # number of lines to look at for log file
 my $dir = "";
 my $file = "";
 
-GetOptions (
+my $result = GetOptions (
 	"ntld|t=i"    => \$ntld,
 	"nips|i=i"    => \$nips,
 	"nlines|l=i"  => \$nlines,
 	"dir|d=s"     => \$dir,
 	"file|f=s"    => \$file,
 ) or die("Error in command line arguments\n");
+if (!$dir && !$file) {
+	die "Please supply a file with -f (also, read the perldoc :p)\n";
+}
 
 # get list of good tlds
 my $good_tlds_list = $dir."/allowed_domains.txt";
@@ -79,7 +82,7 @@ foreach my $log (@logs){
 	print "Working on $log\n\n";
 	my @loglines = split(/\n/,`tail -n$nlines $log`);
 	foreach my $line (@loglines){
-		my %li = &parse_line($line);
+		my %li = parse_line($line);
 		$ip_times{$li{ip}}++;
 		$ip_ua{$li{ip}}=$li{ua};
 	}
@@ -92,7 +95,7 @@ print "------------------\n";
 print "Hits,Approved,TLD,Host,IP,UA\n";
 foreach my $ip (sort {$ip_times{$b} <=> $ip_times{$a}} keys %ip_times){
 	unless($ip =~ /\w+\.\w+\.\w+\.\w+/) { next; }
-	my $host = &get_host_from_ip($ip);	
+	my $host = get_host_from_ip($ip);	
 	$host =~ /([-\w]+\.\w+)$/;
 	my $tld = $1 || "No TLD";
 	$tld_times{$tld}+=$ip_times{$ip};
